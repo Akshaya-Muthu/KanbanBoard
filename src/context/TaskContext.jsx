@@ -1,27 +1,35 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import React, { createContext, useContext, useState } from "react";
 
 const TaskContext = createContext();
 
-const initialData = JSON.parse(localStorage.getItem("tasks")) || [];
+export function useTask() {
+  return useContext(TaskContext);
+}
 
-export const TaskProvider = ({ children }) => {
-  const [tasks, setTasks] = useState(initialData);
-
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+export function TaskProvider({ children }) {
+  const [tasks, setTasks] = useState([]);
 
   const addTask = (task) => {
-    const newTask = { ...task, id: uuidv4(), status: task.status || "To Do" };
+    const newTask = {
+      ...task,
+      id: Date.now().toString(), // unique id
+    };
     setTasks((prev) => [...prev, newTask]);
   };
 
+  const updateTask = (id, updates) => {
+    setTasks((prev) =>
+      prev.map((task) => (task.id === id ? { ...task, ...updates } : task))
+    );
+  };
+
+  const deleteTask = (id) => {
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+  };
+
   return (
-    <TaskContext.Provider value={{ tasks, setTasks, addTask }}>
+    <TaskContext.Provider value={{ tasks, addTask, updateTask, deleteTask }}>
       {children}
     </TaskContext.Provider>
   );
-};
-
-export const useTask = () => useContext(TaskContext);
+}
